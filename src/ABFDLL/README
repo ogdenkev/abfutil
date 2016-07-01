@@ -1,0 +1,4 @@
+ABFDLL
+==========================================================================
+
+This directory contains C++ headers and source code used to wrap the ABFFIO.dll from the ABF FSP 2.01 (circa 2007) into C code for use in ChanneLab.  These files were initially copied over from a copy of the ABFDLL project on an external hard drive, and I assume are the most recent versions used for ChanneLab, but cannot verify this.
