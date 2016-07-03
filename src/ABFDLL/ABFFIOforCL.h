@@ -135,15 +135,16 @@ typedef struct CL_ABFHeader_Tag{
    short    nADCSamplingSeq[ABF_ADCCOUNT];
    float    fADCProgrammableGain[ABF_ADCCOUNT];
    float    fADCDisplayAmplification[ABF_ADCCOUNT];
-   float    fADCDisplayOffset[ABF_ADCCOUNT];       
-   float    fInstrumentScaleFactor[ABF_ADCCOUNT];  
-   float    fInstrumentOffset[ABF_ADCCOUNT];       
+   float    fADCDisplayOffset[ABF_ADCCOUNT];
+   float    fInstrumentScaleFactor[ABF_ADCCOUNT];
+   float    fInstrumentOffset[ABF_ADCCOUNT];
    float    fSignalGain[ABF_ADCCOUNT];
    float    fSignalOffset[ABF_ADCCOUNT];
    float    fSignalLowpassFilter[ABF_ADCCOUNT];
    float    fSignalHighpassFilter[ABF_ADCCOUNT];
    char     nLowpassFilterType[ABF_ADCCOUNT];
    char     nHighpassFilterType[ABF_ADCCOUNT];
+   bool     bHumFilterEnable[ABF_ADCCOUNT];
 
    char     sADCChannelName[ABF_ADCCOUNT][ABF_ADCNAMELEN];   // extra chars so name can be modified for P/N
    char     sADCUnits[ABF_ADCCOUNT][ABF_ADCUNITLEN];
@@ -160,18 +161,21 @@ typedef struct CL_ABFHeader_Tag{
    short    nDigitalDACChannel;
    short    nDigitalHolding;
    short    nDigitalInterEpisode;
-   short    nDigitalTrainActiveLogic;                                   
+   short    nDigitalTrainActiveLogic;
    short    nDigitalValue[ABF_EPOCHCOUNT];
-   short    nDigitalTrainValue[ABF_EPOCHCOUNT];                         
+   short    nDigitalTrainValue[ABF_EPOCHCOUNT];
    bool     bEpochCompression[ABF_EPOCHCOUNT];
    short    nWaveformEnable[ABF_DACCOUNT];
    short    nWaveformSource[ABF_DACCOUNT];
    short    nInterEpisodeLevel[ABF_DACCOUNT];
    short    nEpochType[ABF_DACCOUNT][ABF_EPOCHCOUNT];
    float    fEpochInitLevel[ABF_DACCOUNT][ABF_EPOCHCOUNT];
+   float    fEpochFinalLevel[ABF_DACCOUNT][ABF_EPOCHCOUNT]; // Only used for ABF_EPOCHSLOPE.
    float    fEpochLevelInc[ABF_DACCOUNT][ABF_EPOCHCOUNT];
    long     lEpochInitDuration[ABF_DACCOUNT][ABF_EPOCHCOUNT];
    long     lEpochDurationInc[ABF_DACCOUNT][ABF_EPOCHCOUNT];
+   short    nEpochTableRepetitions[ABF_DACCOUNT];
+   float    fEpochTableStartToStartInterval[ABF_DACCOUNT];
 
    // GROUP #10 - DAC Output File
    float    fDACFileScale[ABF_DACCOUNT];
@@ -180,7 +184,7 @@ typedef struct CL_ABFHeader_Tag{
    short    nDACFileADCNum[ABF_DACCOUNT];
    char     sDACFilePath[ABF_DACCOUNT][ABF_PATHLEN];
 
-   // GROUP #11 - Presweep (conditioning) pulse train
+   // GROUP #11a - Presweep (conditioning) pulse train
    short    nConditEnable[ABF_DACCOUNT];
    long     lConditNumPulses[ABF_DACCOUNT];
    float    fBaselineDuration[ABF_DACCOUNT];
@@ -189,9 +193,24 @@ typedef struct CL_ABFHeader_Tag{
    float    fStepLevel[ABF_DACCOUNT];
    float    fPostTrainPeriod[ABF_DACCOUNT];
    float    fPostTrainLevel[ABF_DACCOUNT];
+   float    fCTStartLevel[ABF_DACCOUNT][ABF_EPOCHCOUNT];
+   float    fCTEndLevel[ABF_DACCOUNT][ABF_EPOCHCOUNT];
+   float    fCTIntervalDuration[ABF_DACCOUNT][ABF_EPOCHCOUNT];
+   float    fCTStartToStartInterval[ABF_DACCOUNT];
+
+   // GROUP #11b - Membrane Test Between Sweeps
    short    nMembTestEnable[ABF_DACCOUNT];
    float    fMembTestPreSettlingTimeMS[ABF_DACCOUNT];
    float    fMembTestPostSettlingTimeMS[ABF_DACCOUNT];
+
+    // GROUP #11c - PreSignal test pulse
+   short    nPreSignalEnable[ABF_DACCOUNT];
+   float    fPreSignalPreStepDuration[ABF_DACCOUNT];
+   float    fPreSignalPreStepLevel[ABF_DACCOUNT];
+   float    fPreSignalStepDuration[ABF_DACCOUNT];
+   float    fPreSignalStepLevel[ABF_DACCOUNT];
+   float    fPreSignalPostStepDuration[ABF_DACCOUNT];
+   float    fPreSignalPostStepLevel[ABF_DACCOUNT];
 
    // GROUP #12 - Variable parameter user list
    short    nULEnable[ABF_USERLISTCOUNT];
@@ -217,7 +236,7 @@ typedef struct CL_ABFHeader_Tag{
    short    nDecayBottomPercentile[ABF_STATS_REGIONS];
    short    nDecayTopPercentile[ABF_STATS_REGIONS];
    short    nStatsChannelPolarity[ABF_ADCCOUNT];
-   short    nStatsSearchMode[ABF_STATS_REGIONS];    // Stats mode per region: mode is cursor region, epoch etc 
+   short    nStatsSearchMode[ABF_STATS_REGIONS];    // Stats mode per region: mode is cursor region, epoch etc
    short    nStatsSearchDAC[ABF_STATS_REGIONS];     // If mode is epoch, then this holds the DAC
 
    // GROUP #14 - Channel Arithmetic
@@ -258,7 +277,8 @@ typedef struct CL_ABFHeader_Tag{
    short    nExternalTagType;
    long     lHeaderSize;
    short    nStatisticsClearStrategy;
-   
+   short    nEnableFirstLastHolding;            // First & Last Holding are now optional.
+
    // GROUP #17 - Trains parameters
    long     lEpochPulsePeriod[ABF_DACCOUNT][ABF_EPOCHCOUNT];
    long     lEpochPulseWidth [ABF_DACCOUNT][ABF_EPOCHCOUNT];
@@ -302,36 +322,42 @@ typedef struct CL_ABFHeader_Tag{
 extern "C" {
 #endif
 
-__declspec(dllexport) int OpenABFFile (char *fileName, int *pFileHandle, int openMode, int IsParamFile,
-									   CL_ABFHeader *pCL_ABFFH, unsigned int *puMaxSamples, unsigned long *pdwMaxEpisodes);
-__declspec(dllexport) int IsABFFile (const char *fileName, int *pDataFormat, int *pnError);
-__declspec(dllexport) int GetActualSamples (int fileHandle, unsigned int *pNumActualSamples);
-__declspec(dllexport) int ReadSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, int nChannel, unsigned long dwEpisode, float *pfBuffer, unsigned int *pNumSamplesRead);
-__declspec(dllexport) int ReadMultiplexSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, unsigned long episode, void *pvBuffer, unsigned int *pNumSamplesRead);
-__declspec(dllexport) int ReadRawSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, int nChannel, unsigned long episode, void *pvBuffer, unsigned int *pNumSamplesRead);
-__declspec(dllexport) int WriteMultiplexSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, const void *pvBuffer, unsigned long dwEpiStartInSamples, unsigned int uSizeInSamples,
-											   int appendData);
-__declspec(dllexport) int WriteRawSweep (int fileHandle, const void *pvBuffer, unsigned long dwSizeInBytes);
-__declspec(dllexport) int WriteWaveform ( int fileHandle, CL_ABFHeader *pCL_ABFFH, unsigned int uDACChannel, const short *pnDACArray);
-__declspec(dllexport) int UpdateABFHeader (int fileHandle, CL_ABFHeader *pCL_ABFFH);
-__declspec(dllexport) int GetWaveform (int fileHandle, const CL_ABFHeader *pCL_ABFFH, unsigned int uDACChannel, unsigned long dwEpisode, float *pfBuffer);
-__declspec(dllexport) int CloseABFFile (int fileHandle);
+#if defined DllExport
+#define DLLFUN   __declspec( dllexport )
+#elif defined DllImport
+#define DLLFUN   __declspec( dllimport )
+#endif
 
-__declspec(dllexport) int InitializeHeader (CL_ABFHeader *pCL_ABFFH);
-__declspec(dllexport) int GetABFError (int nError, const char *fileName, char *textBuffer, UINT uMaxLen);
-__declspec(dllexport) int GetADCScaleFactor (const CL_ABFHeader *pCL_ABFFH, int nChannel, float *pfADCToUUFactor,
+DLLFUN int OpenABFFile (char *fileName, int *pFileHandle, int openMode, int IsParamFile,
+									   CL_ABFHeader *pCL_ABFFH, unsigned int *puMaxSamples, unsigned long *pdwMaxEpisodes);
+DLLFUN int IsABFFile (const char *fileName, int *pDataFormat, int *pnError);
+DLLFUN int GetActualSamples (int fileHandle, unsigned int *pNumActualSamples);
+DLLFUN int ReadSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, int nChannel, unsigned long dwEpisode, float *pfBuffer, unsigned int *pNumSamplesRead);
+DLLFUN int ReadMultiplexSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, unsigned long episode, void *pvBuffer, unsigned int *pNumSamplesRead);
+DLLFUN int ReadRawSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, int nChannel, unsigned long episode, void *pvBuffer, unsigned int *pNumSamplesRead);
+DLLFUN int WriteMultiplexSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, const void *pvBuffer, unsigned long dwEpiStartInSamples, unsigned int uSizeInSamples,
+											   int appendData);
+DLLFUN int WriteRawSweep (int fileHandle, const void *pvBuffer, unsigned long dwSizeInBytes);
+DLLFUN int WriteWaveform ( int fileHandle, CL_ABFHeader *pCL_ABFFH, unsigned int uDACChannel, const short *pnDACArray);
+DLLFUN int UpdateABFHeader (int fileHandle, CL_ABFHeader *pCL_ABFFH);
+DLLFUN int GetWaveform (int fileHandle, const CL_ABFHeader *pCL_ABFFH, unsigned int uDACChannel, unsigned long dwEpisode, float *pfBuffer);
+DLLFUN int CloseABFFile (int fileHandle);
+
+DLLFUN int InitializeHeader (CL_ABFHeader *pCL_ABFFH);
+DLLFUN int GetABFError (int nError, const char *fileName, char *textBuffer, UINT uMaxLen);
+DLLFUN int GetADCScaleFactor (const CL_ABFHeader *pCL_ABFFH, int nChannel, float *pfADCToUUFactor,
 											 float *fADCToUUShift);
-__declspec(dllexport) int ReadParams (int fileHandle, CL_ABFHeader *pCL_ABFFH, int *pError);
-__declspec(dllexport) int WriteParams (const char *pFilename, CL_ABFHeader *pCL_ABFFH, int *pError);
-__declspec(dllexport) int GetEpisodeInfo (int fileHandle, const CL_ABFHeader *pCL_ABFFH, int nChannel, unsigned long dwEpisode, unsigned int *pNumSamples,
+DLLFUN int ReadParams (int fileHandle, CL_ABFHeader *pCL_ABFFH, int *pError);
+DLLFUN int WriteParams (const char *pFilename, CL_ABFHeader *pCL_ABFFH, int *pError);
+DLLFUN int GetEpisodeInfo (int fileHandle, const CL_ABFHeader *pCL_ABFFH, int nChannel, unsigned long dwEpisode, unsigned int *pNumSamples,
 										  double *pStartTime, double *pDuration, int *pnError);
-__declspec(dllexport) int GetTrialDuration (int fileHandle, const CL_ABFHeader *pCL_ABFFH, double *pTrialDuration, int *pnError);
-__declspec(dllexport) int CopyCLHeaders (const CL_ABFHeader *pSourceFH, CL_ABFHeader *pTargetFH);
-__declspec(dllexport) int OldABF_OpenWrite (char *fileName, int *pFileHandle, CL_ABFHeader *pCL_ABFFH, int *pnError);
-__declspec(dllexport) int OldABF_WriteRawSweep (int fileHandle, const void *pvBuffer, unsigned long sizeInBytes);
-__declspec(dllexport) int OldABF_WriteMultiplexSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, const void *pvBuffer, unsigned long episodeStart, unsigned int numSamples);
-__declspec(dllexport) int OldABF_Close (int fileHandle);
-__declspec(dllexport) int OldABF_UpdateHeader (int fileHandle, CL_ABFHeader *pCL_ABFFH);
+DLLFUN int GetTrialDuration (int fileHandle, const CL_ABFHeader *pCL_ABFFH, double *pTrialDuration, int *pnError);
+DLLFUN int CopyCLHeaders (const CL_ABFHeader *pSourceFH, CL_ABFHeader *pTargetFH);
+DLLFUN int OldABF_OpenWrite (char *fileName, int *pFileHandle, CL_ABFHeader *pCL_ABFFH, int *pnError);
+DLLFUN int OldABF_WriteRawSweep (int fileHandle, const void *pvBuffer, unsigned long sizeInBytes);
+DLLFUN int OldABF_WriteMultiplexSweep (int fileHandle, const CL_ABFHeader *pCL_ABFFH, const void *pvBuffer, unsigned long episodeStart, unsigned int numSamples);
+DLLFUN int OldABF_Close (int fileHandle);
+DLLFUN int OldABF_UpdateHeader (int fileHandle, CL_ABFHeader *pCL_ABFFH);
 
 #ifdef __cplusplus
 }

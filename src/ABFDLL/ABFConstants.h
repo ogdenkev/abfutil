@@ -5,7 +5,7 @@
 /*	Constants used in defining the ABF file header			*/
 /*----------------------------------------------------------*/
 #define ABF_ADCCOUNT           16    // number of ADC channels supported.
-#define ABF_DACCOUNT           4     // number of DAC channels supported.
+#define ABF_DACCOUNT           8     // number of DAC channels supported.
 #define ABF_EPOCHCOUNT         10    // number of waveform epochs supported.
 #define ABF_ADCUNITLEN         8     // length of ADC units strings
 #define ABF_ADCNAMELEN_USER    8     // length of user-entered ADC channel name strings
@@ -13,7 +13,8 @@
 #define ABF_DACUNITLEN         8     // length of DAC units strings
 #define ABF_DACNAMELEN         10    // length of DAC channel name strings
 #define ABF_USERLISTLEN        256   // length of the user list (V1.6)
-#define ABF_USERLISTCOUNT      4     // number of independent user lists (V1.6)
+//#define ABF_USERLISTCOUNT    4       // number of independent user lists (V1.6)
+#define ABF_USERLISTCOUNT      ABF_DACCOUNT     // number of independent user lists (V1.6)
 #define ABF_OLDFILECOMMENTLEN  56    // length of file comment string (pre V1.6)
 #define ABF_FILECOMMENTLEN     128   // length of file comment string (V1.6)
 #define ABF_PATHLEN            256   // length of full path, used for DACFile and Protocol name.
@@ -27,7 +28,7 @@
 #define ABF_MAX_SWEEPS_PER_AVERAGE 65500     // The maximum number of sweeps that can be combined into a
                                              // cumulative average (nAverageAlgorithm=ABF_INFINITEAVERAGE).
 #define ABF_MAX_TRIAL_SAMPLES  0x7FFFFFFF    // Maximum length of acquisition supported (samples)
-                                             // INT_MAX is used instead of UINT_MAX because of the signed 
+                                             // INT_MAX is used instead of UINT_MAX because of the signed
                                              // values in the ABF header.
 
 /*----------------------------------------------------------*/
@@ -40,6 +41,8 @@
 #define ABF_DIGI_OPUS      4
 #define ABF_DIGI_PATCH     5
 #define ABF_DIGI_DD1440    6
+#define ABF_DIGI_MINIDIGI2 7
+#define ABF_DIGI_DD1550    8
 
 /*----------------------------------------------------------*/
 // Constants for nDrawingStrategy
@@ -64,17 +67,19 @@
 /*----------------------------------------------------------*/
 // Constants for the ABF_ReadOpen and ABF_WriteOpen functions
 /*----------------------------------------------------------*/
-#define ABF_DATAFILE          0     
-#define ABF_PARAMFILE         1     
-#define ABF_ALLOWOVERLAP      2     // If this flag is not set, overlapping data in fixed-length 
+#define ABF_DATAFILE          0
+#define ABF_PARAMFILE         1
+#define ABF_ALLOWOVERLAP      2     // If this flag is not set, overlapping data in fixed-length
                                     // event-detected data will be edited out by adjustment of
                                     // the synch array. (ABF_ReadOpen only!)
-#define ABF_DATAFILE_ABF1     4 
-#define ABF_PARAMFILE_ABF1    8 
+#define ABF_DATAFILE_ABF1     4
+#define ABF_PARAMFILE_ABF1    8
 
 /*----------------------------------------------------------*/
 // Constants for lParameterID in the ABFDelta structure.
 /*----------------------------------------------------------*/
+// NOTE: If any changes are made to this list, the code in ABF_UpdateHeader must
+//       be updated to include the new items.
 #define ABF_DELTA_HOLDING0          0
 #define ABF_DELTA_HOLDING1          1
 #define ABF_DELTA_HOLDING2          2
@@ -82,6 +87,10 @@
 #define ABF_DELTA_DIGITALOUTS       4
 #define ABF_DELTA_THRESHOLD         5
 #define ABF_DELTA_PRETRIGGER        6
+#define ABF_DELTA_HOLDING4          7
+#define ABF_DELTA_HOLDING5          8
+#define ABF_DELTA_HOLDING6          9
+#define ABF_DELTA_HOLDING7          10
 
 // Because of lack of space, the Autosample Gain ID also contains the ADC number.
 #define ABF_DELTA_AUTOSAMPLE_GAIN   100   // +ADC channel.
@@ -293,7 +302,7 @@
 #define ABF_EXTERNALTAG          2
 #define ABF_VOICETAG             3
 #define ABF_NEWFILETAG           4
-#define ABF_ANNOTATIONTAG        5        // Same as a comment tag except that nAnnotationIndex holds 
+#define ABF_ANNOTATIONTAG        5        // Same as a comment tag except that nAnnotationIndex holds
                                           // the index of the annotation that holds extra information.
 
 // Comment inserted for externally acquired tags (expanded with spaces to ABF_TAGCOMMENTLEN).
@@ -376,10 +385,10 @@
 #define ABF_EPOCH_TYPE_COSINE       5     // cosinusoidal waveform
 #define ABF_EPOCH_TYPE_UNUSED       6     // was ABF_EPOCH_TYPE_RESISTANCE
 #define ABF_EPOCH_TYPE_BIPHASIC     7     // biphasic pulse train
+#define ABF_EPOCHSLOPE              8     // IonWorks style ramp waveform
 
 /*----------------------------------------------------------*/
 // Constants for epoch resistance
-
 /*----------------------------------------------------------*/
 #define ABF_MIN_EPOCH_RESISTANCE_DURATION 8
 
@@ -404,7 +413,7 @@
 #define ABF_CTBASELINEDURATION_MAX     1000000.0F
 #define ABF_CTSTEPDURATION_MAX         1000000.0F
 #define ABF_CTPOSTTRAINDURATION_MAX    1000000.0F
-#define ABF_SWEEPSTARTTOSTARTTIME_MAX  1000000.0F 
+#define ABF_SWEEPSTARTTOSTARTTIME_MAX  1000000.0F
 #define ABF_PNPULSECOUNT_MAX           8
 #define ABF_DIGITALVALUE_MAX           0xFF
 #define ABF_EPOCHDIGITALVALUE_MAX      0xFF
@@ -484,6 +493,7 @@
 #define ABF_PEAK_MEASURE_RISESLOPE           0x00008000
 #define ABF_PEAK_MEASURE_DECAYSLOPE          0x00010000
 #define ABF_PEAK_MEASURE_REGIONSLOPE         0x00020000
+#define ABF_PEAK_MEASURE_DURATION            0x00040000
 
 #define ABF_PEAK_NORMAL_PEAK                 0x00100000
 #define ABF_PEAK_NORMAL_ANTIPEAK             0x00400000
@@ -563,15 +573,15 @@
 #define ABF_COMPRESSION_NONE     0
 #define ABF_COMPRESSION_PKWARE   1
 
-#define ABF_CURRENTVERSION    ABF_V200        // Current file format version number
-
 /*----------------------------------------------------------*/
 // Header Version Numbers
 /*----------------------------------------------------------*/
-#define ABF_V183  1.83F
 #define ABF_V200  2.00F                       // Alpha versions of pCLAMP 10 and DataXpress 2
 #define ABF_V201  2.01F                       // DataXpress 2.0.0.16 and later
                                               // pCLAMP 10.0.0.6 and later
+#define ABF_V202  2.02F                       // Barracuda 1.0 and later
+#define ABF_V203  2.03F                       // pCLAMP 10.4.0.7 and later
+#define ABF_CURRENTVERSION    ABF_V203        // Current file format version number
 
 /*----------------------------------------------------------*/
 // OldABF Constants

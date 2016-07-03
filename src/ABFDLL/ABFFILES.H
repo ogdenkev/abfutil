@@ -9,8 +9,6 @@
 #ifndef INC_ABFFILES2_H
 #define INC_ABFFILES2_H
 
-//#include "ABFFIO.h"
-
 // Include the description of the ABFFileHeader structure
 #ifndef RC_INVOKED
 #include "abfheadr.h"
@@ -20,12 +18,12 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-   
+
 // This is ABFFILES.H; a companion file to ABFFILES.C
 
 #define ABF_INVALID_HANDLE    -1
 
-// Error numbers for routines in this module. 
+// Error numbers for routines in this module.
 // Only positive numbers are used.
 
 #define ABF_SUCCESS                 0
@@ -70,6 +68,7 @@ extern "C" {
 #define ABF_ECRCVALIDATIONFAILED    1041
 #define ABF_EWRITESTRING            1042
 #define ABF_ENOSTRINGS              1043
+#define ABF_EFILECORRUPT			1044
 
 // Notifications that can be passed to the registered callback function.
 #define ABF_NVOICETAGSTART    2000
@@ -97,7 +96,7 @@ extern "C" {
 BOOL ABF_Initialize(HINSTANCE hDLL);
 void ABF_Cleanup(void);
 
-BOOL WINAPI ABF_ReadOpen( LPCSTR szFileName, int *phFile, UINT fFlags, ABFFileHeader *pFH, 
+BOOL WINAPI ABF_ReadOpen( LPCSTR szFileName, int *phFile, UINT fFlags, ABFFileHeader *pFH,
                           UINT *puMaxSamples, DWORD *pdwMaxEpi, int *pnError );
 
 BOOL WINAPI ABF_WriteOpen( LPCSTR szFileName, int *phFile, UINT fFlags, ABFFileHeader *pFH, int *pnError );
@@ -114,87 +113,87 @@ BOOL WINAPI ABF_HasData(int nFile, const ABFFileHeader *pFH);
 
 BOOL WINAPI ABF_Close(int nFile, int *pnError);
 
-BOOL WINAPI ABF_MultiplexRead(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode, 
+BOOL WINAPI ABF_MultiplexRead(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode,
                               void *pvBuffer, UINT *puSizeInSamples, int *pnError);
 
-BOOL WINAPI ABF_MultiplexWrite(int nFile, const ABFFileHeader *pFH, UINT uFlags, const void *pvBuffer, 
+BOOL WINAPI ABF_MultiplexWrite(int nFile, const ABFFileHeader *pFH, UINT uFlags, const void *pvBuffer,
                                DWORD dwEpiStart, UINT uSizeInSamples, int *pnError);
 
 BOOL WINAPI ABF_WriteRawData(int nFile, const void *pvBuffer, DWORD dwSizeInBytes, int *pnError);
 
-BOOL WINAPI ABF_ReadChannel(int nFile, const ABFFileHeader *pFH, int nChannel, DWORD dwEpisode, 
+BOOL WINAPI ABF_ReadChannel(int nFile, const ABFFileHeader *pFH, int nChannel, DWORD dwEpisode,
                             float *pfBuffer, UINT *puNumSamples, int *pnError);
-                                   
-BOOL WINAPI ABF_ReadRawChannel(int nFile, const ABFFileHeader *pFH, int nChannel, DWORD dwEpisode, 
+
+BOOL WINAPI ABF_ReadRawChannel(int nFile, const ABFFileHeader *pFH, int nChannel, DWORD dwEpisode,
                                void *pvBuffer, UINT *puNumSamples, int *pnError);
-                                   
+
 BOOL WINAPI ABF_ReadDACFileEpi(int nFile, const ABFFileHeader *pFH, short *pnDACArray,
                                UINT nChannel, DWORD dwEpisode, int *pnError);
 
 BOOL WINAPI ABF_WriteDACFileEpi(int nFile, ABFFileHeader *pFH, UINT uDACChannel, const short *pnDACArray, int *pnError);
 
-BOOL WINAPI ABF_GetWaveform(int nFile, const ABFFileHeader *pFH, UINT uDACChannel, DWORD dwEpisode, 
+BOOL WINAPI ABF_GetWaveform(int nFile, const ABFFileHeader *pFH, UINT uDACChannel, DWORD dwEpisode,
                               float *pfBuffer, int *pnError);
-                            
+
 BOOL WINAPI ABF_WriteTag(int nFile, ABFFileHeader *pFH, const ABFTag *pTag, int *pnError);
 
 BOOL WINAPI ABF_UpdateTag(int nFile, UINT uTag, const ABFTag *pTag, int *pnError);
 
-BOOL WINAPI ABF_ReadTags(int nFile, const ABFFileHeader *pFH, DWORD dwFirstTag, ABFTag *pTagArray, 
+BOOL WINAPI ABF_ReadTags(int nFile, const ABFFileHeader *pFH, DWORD dwFirstTag, ABFTag *pTagArray,
                          UINT uNumTags, int *pnError);
 
-BOOL WINAPI ABF_FormatTag(int nFile, const ABFFileHeader *pFH, long lTagNumber, 
+BOOL WINAPI ABF_FormatTag(int nFile, const ABFFileHeader *pFH, long lTagNumber,
                           char *pszBuffer, UINT uSize, int *pnError);
 
-BOOL WINAPI ABF_EpisodeFromSynchCount(int nFile, const ABFFileHeader *pFH, DWORD *pdwSynchCount, 
+BOOL WINAPI ABF_EpisodeFromSynchCount(int nFile, const ABFFileHeader *pFH, DWORD *pdwSynchCount,
                                       DWORD *pdwEpisode, int *pnError);
 
-BOOL WINAPI ABF_SynchCountFromEpisode(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode, 
+BOOL WINAPI ABF_SynchCountFromEpisode(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode,
                                       DWORD *pdwSynchCount, int *pnError);
 
-BOOL WINAPI ABF_GetEpisodeFileOffset(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode, 
+BOOL WINAPI ABF_GetEpisodeFileOffset(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode,
                                      DWORD *pdwFileOffset, int *pnError);
 
-BOOL WINAPI ABF_GetMissingSynchCount(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode, 
+BOOL WINAPI ABF_GetMissingSynchCount(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode,
                                      DWORD *pdwMissingSynchCount, int *pnError);
 
 BOOL WINAPI ABF_HasOverlappedData(int nFile, BOOL *pbHasOverlapped, int *pnError);
 
-BOOL WINAPI ABF_GetNumSamples(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode, 
+BOOL WINAPI ABF_GetNumSamples(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode,
                               UINT *puNumSamples, int *pnError);
 
-BOOL WINAPI ABF_GetStartTime(int nFile, const ABFFileHeader *pFH, int nChannel, DWORD dwEpisode, 
+BOOL WINAPI ABF_GetStartTime(int nFile, const ABFFileHeader *pFH, int nChannel, DWORD dwEpisode,
                              double *pdStartTime, int *pnError);
 
-BOOL WINAPI ABF_GetEpisodeDuration(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode, 
+BOOL WINAPI ABF_GetEpisodeDuration(int nFile, const ABFFileHeader *pFH, DWORD dwEpisode,
                                    double *pdDuration, int *pnError);
 
-BOOL WINAPI ABF_GetTrialDuration(int nFile, const ABFFileHeader *pFH, 
+BOOL WINAPI ABF_GetTrialDuration(int nFile, const ABFFileHeader *pFH,
                                    double *pdDuration, int *pnError);
 
-BOOL WINAPI ABF_WriteScopeConfig( int nFile, ABFFileHeader *pFH, int nScopes, 
+BOOL WINAPI ABF_WriteScopeConfig( int nFile, ABFFileHeader *pFH, int nScopes,
                                   /*const*/ ABFScopeConfig *pCfg, int *pnError);
-                                        
-BOOL WINAPI ABF_ReadScopeConfig( int nFile, ABFFileHeader *pFH, ABFScopeConfig *pCfg, 
+
+BOOL WINAPI ABF_ReadScopeConfig( int nFile, ABFFileHeader *pFH, ABFScopeConfig *pCfg,
                                  UINT uMaxScopes, int *pnError);
 
-BOOL WINAPI ABF_WriteStatisticsConfig( int nFile, ABFFileHeader *pFH, 
+BOOL WINAPI ABF_WriteStatisticsConfig( int nFile, ABFFileHeader *pFH,
                                        const ABFScopeConfig *pCfg, int *pnError);
-                                        
+
 BOOL WINAPI ABF_ReadStatisticsConfig( int nFile, const ABFFileHeader *pFH, ABFScopeConfig *pCfg, int *pnError);
 
 BOOL WINAPI ABF_SaveVoiceTag( int nFile, LPCSTR pszFileName, long lDataOffset,
                               ABFVoiceTagInfo *pVTI, int *pnError);
-                              
-BOOL WINAPI ABF_GetVoiceTag( int nFile, const ABFFileHeader *pFH, UINT uTag, LPCSTR pszFileName, 
+
+BOOL WINAPI ABF_GetVoiceTag( int nFile, const ABFFileHeader *pFH, UINT uTag, LPCSTR pszFileName,
                              long lDataOffset, ABFVoiceTagInfo *pVTI, int *pnError);
-                              
+
 BOOL WINAPI ABF_PlayVoiceTag( int nFile, const ABFFileHeader *pFH, UINT uTag, int *pnError);
 
 BOOL WINAPI ABF_WriteDelta(int nFile, ABFFileHeader *pFH, const ABFDelta *pDelta, int *pnError);
-BOOL WINAPI ABF_ReadDeltas(int nFile, const ABFFileHeader *pFH, DWORD dwFirstDelta, 
+BOOL WINAPI ABF_ReadDeltas(int nFile, const ABFFileHeader *pFH, DWORD dwFirstDelta,
                            ABFDelta *pDeltaArray, UINT uNumDeltas, int *pnError);
-BOOL WINAPI ABF_FormatDelta(const ABFFileHeader *pFH, const ABFDelta *pDelta, 
+BOOL WINAPI ABF_FormatDelta(const ABFFileHeader *pFH, const ABFDelta *pDelta,
                             char *pszText, UINT uTextLen, int *pnError);
 
 BOOL WINAPI ABF_GetFileHandle(int nFile, HANDLE *phHandle, int *pnError);
@@ -208,10 +207,10 @@ BOOL WINAPI ABF_SetErrorCallback(int nFile, ABFCallback fnCallback, void *pvThis
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-BOOL WINAPI ABF_AppendOpen(LPCSTR szFileName, int *phFile, ABFFileHeader *pFH, 
+BOOL WINAPI ABF_AppendOpen(LPCSTR szFileName, int *phFile, ABFFileHeader *pFH,
                            UINT *puMaxSamples, DWORD *pdwMaxEpi, int *pnError);
 
-BOOL WINAPI ABF_UpdateEpisodeSamples(int nFile, const ABFFileHeader *pFH, int nChannel, UINT uEpisode, 
+BOOL WINAPI ABF_UpdateEpisodeSamples(int nFile, const ABFFileHeader *pFH, int nChannel, UINT uEpisode,
                                      UINT uStartSample, UINT uNumSamples, float *pfBuffer, int *pnError);
 
 BOOL WINAPI ABF_SetChunkSize( int hFile, ABFFileHeader *pFH, UINT *puMaxSamples, DWORD *pdwMaxEpi, int *pnError );
@@ -221,24 +220,24 @@ BOOL WINAPI ABF_SetOverlap(int nFile, const ABFFileHeader *pFH, BOOL bAllowOverl
 BOOL WINAPI ABF_SetEpisodeStart(int nFile, UINT uEpisode, UINT uEpiStart, int *pnError);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-                                       
+
 void *WINAPI ABF_GetSynchArray(int nFile, int *pnError);
 
 BOOL WINAPI ABF_WriteAnnotation( int nFile, ABFFileHeader *pFH, LPCSTR pszText, int *pnError );
-BOOL WINAPI ABF_ReadAnnotation( int nFile, const ABFFileHeader *pFH, DWORD dwIndex, 
+BOOL WINAPI ABF_ReadAnnotation( int nFile, const ABFFileHeader *pFH, DWORD dwIndex,
                                 LPSTR pszText, DWORD dwBufSize, int *pnError );
 DWORD WINAPI ABF_GetMaxAnnotationSize( int nFile, const ABFFileHeader *pFH );
 
 BOOL WINAPI ABF_WriteStringAnnotation( int nFile, ABFFileHeader *pFH, LPCSTR pszName, LPCSTR pszData, int *pnError );
 BOOL WINAPI ABF_WriteIntegerAnnotation( int nFile, ABFFileHeader *pFH, LPCSTR pszName, int nData, int *pnError );
 
-BOOL WINAPI ABF_ReadStringAnnotation( int nFile, const ABFFileHeader *pFH, DWORD dwIndex, 
-                                     LPSTR pszName, UINT uSizeName, LPSTR pszValue, UINT uSizeValue, 
+BOOL WINAPI ABF_ReadStringAnnotation( int nFile, const ABFFileHeader *pFH, DWORD dwIndex,
+                                     LPSTR pszName, UINT uSizeName, LPSTR pszValue, UINT uSizeValue,
                                      int *pnError );
-BOOL WINAPI ABF_ReadIntegerAnnotation( int nFile, const ABFFileHeader *pFH, DWORD dwIndex, 
+BOOL WINAPI ABF_ReadIntegerAnnotation( int nFile, const ABFFileHeader *pFH, DWORD dwIndex,
                                        LPSTR pszName, UINT uSizeName, int *pnValue, int *pnError );
 
-BOOL WINAPI ABF_ParseStringAnnotation( LPCSTR pszAnn, LPSTR pszName, UINT uSizeName, 
+BOOL WINAPI ABF_ParseStringAnnotation( LPCSTR pszAnn, LPSTR pszName, UINT uSizeName,
                                        LPSTR pszValue, UINT uSizeValue, int *pnError);
 
 BOOL WINAPI ABF_CalculateCRC(int nFile, int *pnError);
@@ -253,4 +252,3 @@ UINT WINAPI ABF_GetActualSamples(int nFile);
 #endif
 
 #endif   // INC_ABFFILES2_H
-
