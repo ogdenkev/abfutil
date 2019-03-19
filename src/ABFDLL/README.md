@@ -10,11 +10,11 @@ ChanneLab, but cannot verify this.
 Update July 3, 2016
 -------------------
 
-The exported functions need to use the __stdcall calling convention to be
+The exported functions need to use the `__stdcall` calling convention to be
 compatible with the OldABFDLL, which is used by ChanneLab. This can be
-accomplished using the /Gz compiler option.
+accomplished using the `/Gz` compiler option.
 
-Note that the  ABFFIOforCL.h file needs to use the BOOL typedef to be compatible with C.
+Note that the  ABFFIOforCL.h file needs to use the `BOOL` typedef to be compatible with C.
 
 To use this library in ChanneLab
 ---------------------------------
@@ -23,7 +23,7 @@ To use this library in ChanneLab
 2. Update `ABFFIOforCL.h` to use the `BOOL` typedef insted of the C++ data type `bool`.
 3. Add the `ABFFIO.dll` from the Axon ABF File Support Pack to the ChanneLab project.
 4. Add the `ABFFIOforCL.lib` and `ABFFIOforCL.dll` files to the ChanneLab project.
-5. Make sure LabWindows/CVI uses the __stdcall calling convention.
+5. Make sure LabWindows/CVI uses the `__stdcall` calling convention.
 
 Compile and link commands
 -------------------------

@@ -32,7 +32,7 @@ library that could be linked into an application.
 
 The ABF File Support Pack is available for download from
 http://mdc.custhelp.com/app/answers/detail/a_id/18881/kw/axon%20file%20support
-It seems that you need to register to download the FSPs (but you man not and
+It seems that you need to register to download the FSPs (but you may not and
 it's free anyway).  You can also search for Axon pCLAMP ABF File Support Pack
 Download in the Molecular Devices Knowledge Base.
 
@@ -41,9 +41,9 @@ Contents
 --------------------------------------------------------------------------
 
 * FSP_ABF_FileSupportPack_2.03.zip, which was download from the above site on
-* June 30, 2016 and had an md5 checksum of c8af567417b1459c1c96974514d6b38e data
-* directory that contains four abf files that were not correctly loaded with the
-* FSP from 2007
+  June 30, 2016 and had an md5 checksum of `c8af567417b1459c1c96974514d6b38e`
+* data directory that contains four abf files that were not correctly loaded
+  with the FSP from 2007
 
 
 Problem with reading pCLAMP 10.4+ ABF files
